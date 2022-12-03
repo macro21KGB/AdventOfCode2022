@@ -15,23 +15,29 @@ def convert_item_type_to_priority(item: str) -> int:
     else:
         return ord(item) - 64 + 26
 
+def get_two_compartments(line: str) -> Tuple[list[str], list[str]]:
+    sack = list(line)
+    sack_length = len(sack)
 
-def get_common_item_between_three_sacks(sack1 : list[str], sack2 : list[str], sack3 : list[str]) -> Tuple[str, int]:
-    for item in sack1:
-        if item in sack2 and item in sack3:
-            return item, convert_item_type_to_priority(item)
-    return None, None
+    first_compartment = sack[:sack_length // 2]
+    second_compartment = sack[sack_length // 2:]
+
+    return first_compartment, second_compartment
+
+def find_common_item_in_two_compartment(first_compartment: list[str], second_compartment: list[str]) -> str:
+    for item in first_compartment:
+        if item in second_compartment:
+            return item
+
+    return None
+
+shared_items = [] 
+for line in lines:
+    compartment_1, compartment_2 = get_two_compartments(line)
+    common_item = find_common_item_in_two_compartment(compartment_1, compartment_2)
+    shared_items.append(common_item)
 
 
-badges_sack = []
+priority_values = list(map(convert_item_type_to_priority, shared_items))
 
-while len(lines) > 0:
-    group_of_three_sack =  [list(item) for item in lines[:3]]
-    lines = lines[3:]
-
-    badges_sack.append(get_common_item_between_three_sacks(group_of_three_sack[0], group_of_three_sack[1], group_of_three_sack[2]))
-
-
-summed_priority = sum([item[1] for item in badges_sack])
-
-print(summed_priority)
+print(sum(priority_values))
