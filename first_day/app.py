@@ -1,10 +1,10 @@
-import functools
+from functools import reduce
 
 total_list = []
 with open("./lista_elfi.txt", "r") as file:
     total_list = file.read().split("\n\n")
 
-total_sum = [functools.reduce(lambda x, y: x + y, [int(x) for x in el.split("\n")]) for el in total_list]
+total_sum = [reduce(lambda x, y: x + y, [int(x) for x in el.split("\n")]) for el in total_list]
 
 total_sum.sort(reverse=True)
 

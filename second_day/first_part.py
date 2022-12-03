@@ -24,7 +24,6 @@ class Round():
         self.myShape = myShape
         self.otherShape = otherShape
 
-
     def calculate_result(self):
         if self.myShape == self.otherShape:
             return self.myShape.value + POINT_FOR_DRAW
