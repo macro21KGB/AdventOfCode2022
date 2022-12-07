@@ -10,4 +10,4 @@ root_dir.add([Directory("a", [
 
 
 
-print(root_dir.get_total_size(0))
+print(root_dir.view(0))

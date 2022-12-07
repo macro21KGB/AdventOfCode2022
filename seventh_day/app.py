@@ -2,8 +2,7 @@ from typing import Union, Tuple
 from classes import File, Directory
 
 lines = []
-from dataclasses import dataclass
-with open("./test_input.txt", "r") as file:
+with open("input.txt", "r") as file:
     lines = file.readlines()
 
 def parse_command(command: str) -> Tuple[str, str]:
@@ -18,7 +17,7 @@ def parse_command(command: str) -> Tuple[str, str]:
 
 def take_files_from_ls(lines: list[str], current_index: int, current_directory: Directory) -> Tuple[int, list]:
     items = []
-    while not lines[current_index].startswith("$") and current_index < len(lines) - 1:
+    while not lines[current_index].startswith("$") and lines[current_index] != "###":
         first_part, second_part = parse_command(lines[current_index])
         
 
@@ -30,47 +29,41 @@ def take_files_from_ls(lines: list[str], current_index: int, current_directory: 
         current_index += 1
     
 
-    return current_index, items
+    return current_index - 1, items
 
+def main():
+    root_dir = Directory("/", [], None)
+    current_directory = root_dir
+    current_index = 0
 
-def isCommand(line: str):
-    return line.startswith("$")
+    while current_index < len(lines):
 
-def execute_command(input: Tuple[str, str], current_directory: Directory, current_index: int):
-    command = input[0]
-    argument = input[1]
+        command, argument = parse_command(lines[current_index])
 
-    match command:
-        case "cd":
+        if command == "cd":
             if argument == "..":
-                current_directory.go_up()
-                return
+                current_directory = current_directory.go_up()
+            else:
+                found_directory = root_dir.find(argument)
+                if found_directory is None:
+                    print("No such directory")
+                    current_directory = current_directory.go_up()
+                else:
+                    current_directory = found_directory
 
-            if current_directory.name != argument:
-
-                nuova_directory = Directory(argument, [], current_directory)
-                current_directory.add([nuova_directory])
-                current_directory = nuova_directory
-        case "ls":
-
-
-    
-
-current_index = 0
-root_directory = Directory("/", [])
-current_directory = root_directory
-
-while current_index < len(lines):
-
-    line : str = lines[current_index]
-
-    if isCommand(line):
-                command, argument = parse_command(line)
-        execute_command((command, argument), current_directory)
+        elif command == "ls":
+            current_index, items = take_files_from_ls(lines, current_index + 1, current_directory)
+            current_directory.add(items)
+        current_index += 1
 
 
+    final_sum = 0
+    for dir in root_dir.get_all_directories_below_me([]):
+        size_of_dir = dir.get_total_size(0)
+        if size_of_dir <= 1000000:
+            final_sum += size_of_dir
 
-    current_index += 1
+    print(final_sum)
 
-
-print(root_directory)
+if __name__ == "__main__":
+    main()
