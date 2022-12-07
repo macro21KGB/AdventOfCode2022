@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Union, Tuple
 
 lines = []
 from dataclasses import dataclass
-with open("./input.txt", "r") as file:
+with open("./test_input.txt", "r") as file:
     lines = file.readlines()
 
 
@@ -14,12 +14,25 @@ class File:
 @dataclass
 class Directory:
     name: str
-    items: list
+    items: list[Union[File,'Directory']]
+    parent: 'Directory' = None
 
-    def add(self, item):
-        self.items.append(item)
+    def add(self, *items):
+        for item in items:
+            self.items.append(item)
 
+    def go_up(self):
+        return self.parent
 
+    def find(self,folder_name: str) -> 'Directory' :
+        if folder_name == self.name:
+            return self
+
+        for item in self.items:
+            if item is Directory:
+                item.find(folder_name)
+
+        return None
 
 class ChangeCommand:
     def __init__(self):
@@ -31,19 +44,11 @@ class ChangeCommand:
     def __remove_directory(self):
         self.directory_stack.pop()
 
-    def go(self,path: str):
-
-        match path:
-            case "..":
-                self.__remove_directory()
-            case _:
-                self.directory_stack.append(path)
     def __str__(self):
         return f"Current Directory: {self.get_current_directory()} Directories: {self.directory_stack}"
 
-ccommand = ChangeCommand()
 
-def parse_command(command: str):
+def parse_command(command: str) -> Tuple[str, str]:
     command = command.replace("$", "").strip()
     splitted_command = command.split(" ")
 
@@ -51,36 +56,50 @@ def parse_command(command: str):
 
     arg = splitted_command[1] if len(splitted_command) > 1 else None
 
-    return splitted_command[0], arg
+    return command_only, arg
 
-def take_files_from_ls(lines, current_index) -> int:
+def take_files_from_ls(lines, current_index, current_directory) -> Tuple[int, list]:
+    items = []
     while not lines[current_index].startswith("$") and current_index < len(lines) - 1:
-        splitted_line = lines[current_index].split(" ")
+        first_part, second_part = parse_command(lines[current_index])
+        
 
-        if splitted_line[0].isalnum() and splitted_line[0].startswith("dir"):
-            directory_map[ccommand.get_current_directory()].add(File(splitted_line[1].strip(), splitted_line[0]))
+        if first_part.isalnum() and not first_part.startswith("dir"):
+            print(first_part)
+            print(second_part)
+            items.append(File(second_part, first_part))
+        else:
+            items.append(Directory(second_part, [], current_directory))
+
         current_index += 1
+    
 
-    return current_index
+    return current_index, items
 
 current_index = 0
-directory_map = {}
+
+root_directory = Directory("/", [])
+current_directory = root_directory
 while current_index < len(lines):
-    if lines[current_index].startswith("$"):
-        command, arg = parse_command(lines[current_index])
+
+    command, arg = parse_command(lines[current_index])
+        
+    match command:
+        case "cd":
+            if arg == "..":
+                current_directory = current_directory.go_up()
             
-        match command:
-            case "cd":
-                ccommand.go(arg)
-                directory_added = directory_map.get(arg)
-                if directory_added is None:
-                    directory_map[arg] = Directory(arg, [])
-            case "ls":
-                # print all lines without $
-                current_index += 1
-                current_index = take_files_from_ls(lines, current_index)
-     
+            found_folder = root_directory.find(arg)
+            if found_folder is None:
+                current_directory.add(Directory(arg, [], current_directory))
+            else:
+                current_directory = found_folder
+
+        case "ls":
+            current_index += 1
+            current_index , items_inside_folder = take_files_from_ls(lines, current_index, current_directory)
+            current_directory.add(items_inside_folder)
+ 
     current_index += 1
     
     
-print(directory_map["/"])
