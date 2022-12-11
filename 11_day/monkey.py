@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-
+from typing import Tuple
 
 @dataclass
 class Monkey:
     id: int
     starting_items: list[int]
     divisible_number: int
-    operation_value: (str, str)
-    monkey_to_pass: (int, int)
+    operation_value: Tuple[str, str]
+    monkey_to_pass: Tuple[int, int]
     inspect_count: int = 0
 
     def remove_first_item(self):
